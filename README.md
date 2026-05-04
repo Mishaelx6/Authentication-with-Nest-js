@@ -1,98 +1,264 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Secure Management System with NestJS & Prisma
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A comprehensive waste management system built with NestJS, Prisma ORM, and PostgreSQL, featuring role-based access control (RBAC) and attribute-based access control (ABAC) security policies.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🏗️ Architecture Overview
 
-## Description
+This system implements a secure multi-role architecture with the following components:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **NestJS** - Progressive Node.js framework
+- **Prisma ORM** - Type-safe database access
+- **PostgreSQL** - Primary database
+- **JWT Authentication** - Secure token-based auth
+- **RBAC + ABAC** - Multi-layered security system
 
-## Project setup
+## 🚀 Quick Start
 
-```bash
-$ npm install
+### Prerequisites
+
+- Node.js (v18+)
+- Docker & Docker Compose
+- Git
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Mishaelx6/Authentication-with-Nest-js.git
+   cd Authentication-with-Nest-js
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start PostgreSQL database**
+   ```bash
+   docker compose up -d
+   ```
+
+4. **Generate Prisma client**
+   ```bash
+   npx prisma generate
+   ```
+
+5. **Run database migrations**
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+
+6. **Seed the database**
+   ```bash
+   npm run seed
+   ```
+
+7. **Start the application**
+   ```bash
+   npm run start:dev
+   ```
+
+The server will be running on `http://localhost:3000`
+
+## 📊 Database Schema
+
+### Models
+
+- **User**: Authentication and role management
+- **Estate**: Property/estate information
+- **WasteLog**: Waste collection tracking
+
+### User Roles
+
+- **ADMIN**: Full system access
+- **RESIDENT**: Estate-specific access
+- **RIDER**: Waste collection operations
+
+## 🔐 Security Architecture
+
+### Authentication
+
+- JWT-based authentication with secure token generation
+- Password hashing with bcryptjs
+- Token expiration management
+
+### Authorization
+
+#### RBAC (Role-Based Access Control)
+
+```typescript
+@Roles(Role.ADMIN, Role.RIDER)
+@UseGuards(RolesGuard)
 ```
 
-## Compile and run the project
+#### ABAC (Attribute-Based Access Control)
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```typescript
+@Policy(PolicyAction.QUERY_WASTE_LOGS)
+@UseGuards(PolicyGuard)
 ```
 
-## Run tests
+### Security Policies
+
+1. **Residents**: Can only query WasteLogs from their estate
+2. **Riders**: Can only update their own WasteLogs
+3. **Admins**: Full access to all operations
+
+## 🛠️ API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/login` | User login |
+| POST | `/auth/register` | User registration |
+| GET | `/auth/profile` | Get user profile |
+
+### Waste Management
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| GET | `/waste-logs` | All | Query waste logs (filtered by role) |
+| POST | `/waste-logs` | ADMIN, RIDER | Create waste log |
+| GET | `/waste-logs/:id` | All | Get specific waste log |
+| PATCH | `/waste-logs/:id` | ADMIN, RIDER | Update waste log |
+| DELETE | `/waste-logs/:id` | ADMIN | Delete waste log |
+| GET | `/waste-logs/stats` | All | Get waste statistics |
+
+## 📱 Example Usage
+
+### Login as Admin
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@abujaestate.com", "password": "admin123"}'
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Create Waste Log (Rider)
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+curl -X POST http://localhost:3000/waste-logs \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"status": "PENDING"}'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Query Waste Logs (Resident)
 
-## Resources
+```bash
+curl -X GET "http://localhost:3000/waste-logs" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🧪 Test Data
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+The seed script creates the following test users:
 
-## Support
+| Role | Email | Password |
+|-------|-------|----------|
+| Admin | admin@abujaestate.com | admin123 |
+| Resident | resident@abujaestate.com | resident123 |
+| Rider | rider@abujaestate.com | rider123 |
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🔧 Development
 
-## Stay in touch
+### Running Tests
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Unit tests
+npm run test
 
-## License
+# E2E tests
+npm run test:e2e
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Test coverage
+npm run test:cov
+```
+
+### Database Management
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Run migrations
+npx prisma migrate dev
+
+# Reset database
+npx prisma migrate reset
+
+# View database
+npx prisma studio
+```
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/auth_nestjs"
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+```
+
+## 🏛️ Project Structure
+
+```
+src/
+├── auth/                 # Authentication module
+│   ├── auth.service.ts
+│   ├── auth.controller.ts
+│   ├── jwt.strategy.ts
+│   ├── roles.guard.ts
+│   ├── policy.guard.ts
+│   └── ...
+├── waste-log/           # Waste management module
+│   ├── waste-log.service.ts
+│   ├── waste-log.controller.ts
+│   └── waste-log.module.ts
+├── prisma/              # Database module
+│   ├── prisma.service.ts
+│   └── prisma.module.ts
+└── app.module.ts        # Root module
+```
+
+## 🚀 Deployment
+
+### Production Build
+
+```bash
+npm run build
+npm run start:prod
+```
+
+### Docker Deployment
+
+```bash
+docker build -t auth-nestjs .
+docker run -p 3000:3000 auth-nestjs
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For questions and support:
+
+- Create an issue on GitHub
+- Check the [NestJS Documentation](https://docs.nestjs.com)
+- Visit the [Prisma Documentation](https://www.prisma.io/docs)
+
+
+
+
+
