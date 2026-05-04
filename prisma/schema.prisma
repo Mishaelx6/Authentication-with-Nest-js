@@ -1,13 +1,66 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  RESIDENT
+  RIDER
+}
+
+enum WasteLogStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  role           Role     @default(RESIDENT)
+  estateId       String
+  clearanceLevel Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relations
+  estate         Estate   @relation(fields: [estateId], references: [id], onDelete: Cascade)
+  wasteLogs      WasteLog[]
+  
+  @@map("users")
+}
+
+model Estate {
+  id        String   @id @default(cuid())
+  name      String
+  location  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  users     User[]
+  
+  @@map("estates")
+}
+
+model WasteLog {
+  id        String        @id @default(cuid())
+  riderId   String
+  status    WasteLogStatus @default(PENDING)
+  timestamp DateTime      @default(now())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  // Relations
+  rider     User          @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  
+  @@map("waste_logs")
 }
